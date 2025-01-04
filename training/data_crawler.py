@@ -1,3 +1,4 @@
+import datetime
 import json
 
 from selenium import webdriver
@@ -46,5 +47,12 @@ class DataCrawler:
         driver.quit()
 
         data_crawl.append({"title": title, "summary": sumary, "body": body})
-        with open("data/data_crawl.json", "w", encoding="utf-8") as f:
+        now = datetime.datetime.now()
+        current_time = now.strftime("%Y-%m-%d_%H_%M")
+
+        with open(
+            f"data/data_crawl-{current_time}.json", "w", encoding="utf-8"
+        ) as f:
             json.dump(data_crawl, f, ensure_ascii=False, indent=4)
+
+        return data_crawl
