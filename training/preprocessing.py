@@ -15,7 +15,7 @@ class TextPreprocess:
 
         cleaned_text = self._remove_whitespace(text)
         cleaned_text = self._remove_stopwords(cleaned_text)
-        cleaned_text = self._lowercase(cleaned_text)
+        # cleaned_text = self._lowercase(cleaned_text)
         cleaned_text = self._remove_punctuation(cleaned_text)
         cleaned_text = self._remove_whitespace(cleaned_text)
         return cleaned_text

@@ -10,7 +10,7 @@ class DataCrawler:
     def __init__(self) -> None:
         self.service = "/home/trongnv130/Desktop/keyword-extraction/edgedriver_linux64/msedgedriver"
 
-    def crawl_data(self, url: str) -> None:
+    def crawl_data(self, url: str, record: bool = True) -> None:
         """
         This function crawl data from a given url
 
@@ -50,9 +50,10 @@ class DataCrawler:
         now = datetime.datetime.now()
         current_time = now.strftime("%Y-%m-%d_%H_%M")
 
-        with open(
-            f"data/data_crawl-{current_time}.json", "w", encoding="utf-8"
-        ) as f:
-            json.dump(data_crawl, f, ensure_ascii=False, indent=4)
+        if record:
+            with open(
+                f"data/data_crawl-{current_time}.json", "w", encoding="utf-8"
+            ) as f:
+                json.dump(data_crawl, f, ensure_ascii=False, indent=4)
 
         return data_crawl

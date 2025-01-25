@@ -1,7 +1,7 @@
 import argparse
 
 import matplotlib.pyplot as plt
-from underthesea import chunk, pos_tag, word_tokenize
+from underthesea import pos_tag
 from wordcloud import WordCloud
 
 from training.data_crawler import DataCrawler
@@ -23,31 +23,45 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-def filter_phrases_by_pos(text, tags=["N", "Np", "Nu", "V", "A"]):
-    """Giữ lại các cụm từ có POS phù hợp"""
+def filter_pos_tagging(text, tags=["N", "Np", "Nu", "V", "A"]):
+    """Giữ lại các cụm từ có POS phù hợp
+
+    Args:
+
+    text (str): Đoạn văn bản cần lọc
+    tags (list): Danh sách các loại POS cần giữ lại
+
+    Returns:
+
+    list: Danh sách các từ đơn lẻ
+    """
+
     tagged = pos_tag(text)
-    return " ".join([word for word, tag in tagged if tag in tags])
+    return [word for word, tag in tagged if tag in tags]
 
 
 if __name__ == "__main__":
-    data_crawl = crawler.crawl_data(args.url)
+    data_crawl = crawler.crawl_data(args.url, record=False)
 
     dataset = Dataset(data_crawl)
     title = [dataset[i][0] for i in range(len(dataset))]
     summary = [dataset[i][1] for i in range(len(dataset))]
     body = [dataset[i][2] for i in range(len(dataset))]
 
-    body = word_tokenize(body[0])
-    filtered_text = filter_phrases_by_pos(" ".join(body))
+    corpus = filter_pos_tagging(body[0])
+    filtered_text = [" ".join(corpus)]
 
-    extractor.fit([filtered_text])
+    extractor.fit(
+        corpus
+    )  # tại sao fit() list các từ đơn lẻ nhưng transform cả context thì extract hiệu quả hơn fit cả context (context là list các từ đơn lẻ join vào)
     keywords = extractor.extract(filtered_text, int(args.top_k))
     keyword_dict = {word: score for word, score in keywords}
+
+    # Visualize keyword
     wordcloud = WordCloud(
         width=800, height=400, background_color="white"
     ).generate_from_frequencies(keyword_dict)
 
-    # Plot Word Cloud
     plt.figure(figsize=(10, 5))
     plt.imshow(wordcloud, interpolation="bilinear")
     plt.axis("off")
