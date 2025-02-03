@@ -13,6 +13,7 @@ from training.keyword_extractor import (
 
 crawler = DataCrawler()
 tfidf_extractor = TfidfKeywordExtractor()
+bert_extractor = BertKeywordExtractor()
 
 parser = argparse.ArgumentParser(
     description="Inference script for keyword extraction"
@@ -26,15 +27,13 @@ parser.add_argument(
 parser.add_argument(
     "--model_name_or_path",
     type=str,
-    help="extract using LM",
-    default="vinai/phobert-base",
+    help="required embedding language model",
+    default="paraphrase-multilingual-MiniLM-L12-v2",
 )
 parser.add_argument(
     "--method", type=str, help="select method to extract", default="tfidf"
 )
 args = parser.parse_args()
-
-bert_extractor = BertKeywordExtractor(args.model_name_or_path)
 
 
 def filter_pos_tagging(text, tags=["N", "Np", "V", "A"]):
@@ -73,7 +72,9 @@ if __name__ == "__main__":
         keywords = tfidf_extractor.extract(filtered_text, top_k=args.top_k)
     elif args.method == "bert":
         # Extract keywords PhoBERT
-        keywords = bert_extractor.extract(filtered_text, top_k=args.top_k)
+        keywords = bert_extractor.extract(
+            filtered_text, top_k=args.top_k, model=args.model_name_or_path
+        )
 
     keyword_dict = {word.replace("_", " "): score for word, score in keywords}
 

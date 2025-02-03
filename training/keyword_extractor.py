@@ -29,11 +29,12 @@ class TfidfKeywordExtractor:
 
 
 class BertKeywordExtractor:
-    def __init__(self, model_name_or_path: str):
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
-        self.model = AutoModel.from_pretrained(model_name_or_path)
+    def __init__(self):
+        pass
 
-    def extract(self, filtered_text: str, top_k: int = 5) -> List[str]:
+    def extract(
+        self, filtered_text: str, model: str, top_k: int = 5
+    ) -> List[str]:
         """
         Args:
             filtered_text (str): Text đã được preprocessing
@@ -42,23 +43,28 @@ class BertKeywordExtractor:
         Returns:
             list: Danh sách các từ khóa
         """
-        kw_model = KeyBERT(
-            model=self.phobert_embedding
-        )  # hoặc có thể dùng model pre-trained embedding (e.g: Trongdz/roberta-embeddings-auto-labeling-tasks)
+        kw_model = KeyBERT(model=model)
+
+        # hoặc có thể dùng hàm model embedding (model=self.phobert_embedding)
+
         keywords = kw_model.extract_keywords(
             filtered_text,
-            # keyphrase_ngram_range=(1, 2),
+            use_maxsum=True,
+            nr_candidates=20,
             top_n=top_k,
         )
         return keywords
 
     # PhoBERT embedding
     def phobert_embedding(self, texts: str) -> List[float]:
-        inputs = self.tokenizer(
+        MODEL = "models/phobert-base"
+        tokenizer = AutoTokenizer.from_pretrained(MODEL)
+        model = AutoModel.from_pretrained(MODEL)
+        inputs = tokenizer(
             texts, padding=True, truncation=True, return_tensors="pt"
         )
         with torch.no_grad():
-            embeddings = self.model(**inputs)[0]  # Last hidden state
+            embeddings = model(**inputs)[0]  # Last hidden state
         return embeddings.numpy()
 
 
