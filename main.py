@@ -1,19 +1,19 @@
 import argparse
 
-import matplotlib.pyplot as plt
 from underthesea import pos_tag
-from wordcloud import WordCloud
 
 from training.data_crawler import DataCrawler
 from training.data_loader import Dataset
 from training.keyword_extractor import (
     BertKeywordExtractor,
     TfidfKeywordExtractor,
+    WordCloudVisualizer,
 )
 
 crawler = DataCrawler()
 tfidf_extractor = TfidfKeywordExtractor()
 bert_extractor = BertKeywordExtractor()
+wordcloud = WordCloudVisualizer()
 
 parser = argparse.ArgumentParser(
     description="Inference script for keyword extraction"
@@ -78,18 +78,5 @@ if __name__ == "__main__":
 
     keyword_dict = {word.replace("_", " "): score for word, score in keywords}
 
-    # Visualize keyword
-    wordcloud = WordCloud(
-        width=800, height=400, background_color="white"
-    ).generate_from_frequencies(keyword_dict)
-
-    plt.figure(figsize=(10, 5))
-    plt.imshow(wordcloud, interpolation="bilinear")
-    plt.axis("off")
-    plt.title(
-        "GHTK Keyword Extraction",
-        fontsize=16,
-        fontweight="bold",
-        color="green",
-    )
-    plt.show()
+    # Visualize keyword to wordcloud
+    wordcloud.visualize_wordcloud(keyword_dict)

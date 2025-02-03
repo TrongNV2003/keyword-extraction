@@ -1,11 +1,13 @@
 from typing import List
 
+import matplotlib.pyplot as plt
 import torch
 from gensim import corpora
 from gensim.models import LdaModel
 from keybert import KeyBERT
 from sklearn.feature_extraction.text import TfidfVectorizer
 from transformers import AutoModel, AutoTokenizer
+from wordcloud import WordCloud
 
 
 class TfidfKeywordExtractor:
@@ -20,7 +22,16 @@ class TfidfKeywordExtractor:
         self.vectorizer.fit(corpus)
 
     def extract(self, filtered_text: str, top_k: int = 5) -> List[str]:
-        """Trích xuất từ khóa dựa trên điểm TF-IDF"""
+        """
+        Trích xuất từ khóa dựa trên điểm TF-IDF
+
+        Args:
+            filtered_text (str): Text đã được preprocessing
+            top_k (int): Số lượng từ khóa cần trích xuất
+
+        Returns:
+            list: Danh sách các từ khóa
+        """
         tfidf_matrix = self.vectorizer.transform(filtered_text)
         feature_names = self.vectorizer.get_feature_names_out()
         scores = tfidf_matrix.toarray().flatten()
@@ -66,6 +77,36 @@ class BertKeywordExtractor:
         with torch.no_grad():
             embeddings = model(**inputs)[0]  # Last hidden state
         return embeddings.numpy()
+
+
+class WordCloudVisualizer:
+    def __init__(self):
+        pass
+
+    def visualize_wordcloud(self, keyword_dict: dict) -> None:
+        """
+        Hàm vẽ wordcloud từ danh sách keyword
+
+        Args:
+            keyword_dict (dict): Danh sách keyword và score tương ứng
+
+        Returns:
+            None
+        """
+        wordcloud = WordCloud(
+            width=800, height=400, background_color="white"
+        ).generate_from_frequencies(keyword_dict)
+
+        plt.figure(figsize=(10, 5))
+        plt.imshow(wordcloud, interpolation="bilinear")
+        plt.axis("off")
+        plt.title(
+            "GHTK Keyword Extraction",
+            fontsize=16,
+            fontweight="bold",
+            color="green",
+        )
+        plt.show()
 
 
 class LDAExtractor:
