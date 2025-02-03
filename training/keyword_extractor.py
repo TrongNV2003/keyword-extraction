@@ -4,21 +4,19 @@ from gensim import corpora
 from gensim.models import LdaModel
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from training.algorithms.tf_idf import Tfidf
-
 
 class TfidfKeywordExtractor:
     def __init__(self):
         self.vectorizer = TfidfVectorizer(
             max_features=10000,
-            ngram_range=(2, 3),
+            # ngram_range=(1, 3),
             token_pattern=r"(?u)\b\w+\b",
         )
 
     def fit(self, corpus):
         self.vectorizer.fit(corpus)
 
-    def extract(self, text: List[str], top_k: int = 5) -> list:
+    def extract(self, text: str, top_k: int = 5) -> list:
         """Trích xuất từ khóa dựa trên điểm TF-IDF"""
         tfidf_matrix = self.vectorizer.transform(text)
         feature_names = self.vectorizer.get_feature_names_out()

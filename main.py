@@ -23,7 +23,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-def filter_pos_tagging(text, tags=["N", "Np", "Nu", "V", "A"]):
+def filter_pos_tagging(text, tags=["N", "Np", "V", "A"]):
     """Giữ lại các cụm từ có POS phù hợp
 
     Args:
@@ -49,13 +49,14 @@ if __name__ == "__main__":
     body = [dataset[i][2] for i in range(len(dataset))]
 
     corpus = filter_pos_tagging(body[0])
-    filtered_text = [" ".join(corpus)]
 
-    extractor.fit(
-        corpus
-    )  # tại sao fit() list các từ đơn lẻ nhưng transform cả context thì extract hiệu quả hơn fit cả context (context là list các từ đơn lẻ join vào)
+    tokens = [token.replace(" ", "_") for token in corpus]
+    filtered_text = [" ".join(tokens)]
+
+    extractor.fit(filtered_text)
     keywords = extractor.extract(filtered_text, int(args.top_k))
-    keyword_dict = {word: score for word, score in keywords}
+
+    keyword_dict = {word.replace("_", " "): score for word, score in keywords}
 
     # Visualize keyword
     wordcloud = WordCloud(
