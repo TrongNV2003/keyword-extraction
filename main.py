@@ -1,7 +1,5 @@
 import argparse
 
-from underthesea import pos_tag
-
 from training.data_crawler import DataCrawler
 from training.data_loader import Dataset
 from training.keyword_extractor import (
@@ -9,10 +7,14 @@ from training.keyword_extractor import (
     TfidfKeywordExtractor,
     WordCloudVisualizer,
 )
+from training.preprocessing import TextPreprocess
 
 crawler = DataCrawler()
+preprocess = TextPreprocess()
+
 tfidf_extractor = TfidfKeywordExtractor()
 bert_extractor = BertKeywordExtractor()
+
 wordcloud = WordCloudVisualizer()
 
 parser = argparse.ArgumentParser(
@@ -36,23 +38,6 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-def filter_pos_tagging(text, tags=["N", "Np", "V", "A"]):
-    """Giữ lại các cụm từ có POS phù hợp
-
-    Args:
-
-    text (str): Đoạn văn bản cần lọc
-    tags (list): Danh sách các loại POS cần giữ lại
-
-    Returns:
-
-    list: Danh sách các từ đơn lẻ
-    """
-
-    tagged = pos_tag(text)
-    return [word for word, tag in tagged if tag in tags]
-
-
 if __name__ == "__main__":
     data_crawl = crawler.crawl_data(args.url, record=False)
 
@@ -61,7 +46,7 @@ if __name__ == "__main__":
     summary = [dataset[i][1] for i in range(len(dataset))]
     body = [dataset[i][2] for i in range(len(dataset))]
 
-    corpus = filter_pos_tagging(body[0])
+    corpus = preprocess.filter_pos_tagging(body[0])
 
     tokens = [token.replace(" ", "_") for token in corpus]
     filtered_text = [" ".join(tokens)]
