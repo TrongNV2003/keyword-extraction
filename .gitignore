@@ -7,3 +7,5 @@ vncorenlp
 data
 
 /edgedriver_linux64
+
+_debugger.py

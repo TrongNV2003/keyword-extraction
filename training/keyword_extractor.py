@@ -1,8 +1,11 @@
 from typing import List
 
+import torch
 from gensim import corpora
 from gensim.models import LdaModel
+from keybert import KeyBERT
 from sklearn.feature_extraction.text import TfidfVectorizer
+from transformers import AutoModel, AutoTokenizer
 
 
 class TfidfKeywordExtractor:
@@ -16,13 +19,47 @@ class TfidfKeywordExtractor:
     def fit(self, corpus):
         self.vectorizer.fit(corpus)
 
-    def extract(self, text: str, top_k: int = 5) -> list:
+    def extract(self, filtered_text: str, top_k: int = 5) -> List[str]:
         """Trích xuất từ khóa dựa trên điểm TF-IDF"""
-        tfidf_matrix = self.vectorizer.transform(text)
+        tfidf_matrix = self.vectorizer.transform(filtered_text)
         feature_names = self.vectorizer.get_feature_names_out()
         scores = tfidf_matrix.toarray().flatten()
         top_indices = scores.argsort()[::-1][:top_k]
         return [(feature_names[i], scores[i]) for i in top_indices]
+
+
+class BertKeywordExtractor:
+    def __init__(self, model_name_or_path: str):
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+        self.model = AutoModel.from_pretrained(model_name_or_path)
+
+    def extract(self, filtered_text: str, top_k: int = 5) -> List[str]:
+        """
+        Args:
+            filtered_text (str): Text đã được preprocessing
+            top_k (int): Số lượng từ khóa cần trích xuất
+
+        Returns:
+            list: Danh sách các từ khóa
+        """
+        kw_model = KeyBERT(
+            model=self.phobert_embedding
+        )  # hoặc có thể dùng model pre-trained embedding (e.g: Trongdz/roberta-embeddings-auto-labeling-tasks)
+        keywords = kw_model.extract_keywords(
+            filtered_text,
+            # keyphrase_ngram_range=(1, 2),
+            top_n=top_k,
+        )
+        return keywords
+
+    # PhoBERT embedding
+    def phobert_embedding(self, texts: str) -> List[float]:
+        inputs = self.tokenizer(
+            texts, padding=True, truncation=True, return_tensors="pt"
+        )
+        with torch.no_grad():
+            embeddings = self.model(**inputs)[0]  # Last hidden state
+        return embeddings.numpy()
 
 
 class LDAExtractor:

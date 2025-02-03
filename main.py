@@ -6,10 +6,13 @@ from wordcloud import WordCloud
 
 from training.data_crawler import DataCrawler
 from training.data_loader import Dataset
-from training.keyword_extractor import TfidfKeywordExtractor
+from training.keyword_extractor import (
+    BertKeywordExtractor,
+    TfidfKeywordExtractor,
+)
 
 crawler = DataCrawler()
-extractor = TfidfKeywordExtractor()
+tfidf_extractor = TfidfKeywordExtractor()
 
 parser = argparse.ArgumentParser(
     description="Inference script for keyword extraction"
@@ -18,9 +21,20 @@ parser.add_argument(
     "--url", type=str, help="url of a newspaper from zingnews", required=True
 )
 parser.add_argument(
-    "--top_k", type=str, help="select top k words to extract", default=20
+    "--top_k", type=int, help="select top k words to extract", default=20
+)
+parser.add_argument(
+    "--model_name_or_path",
+    type=str,
+    help="extract using LM",
+    default="vinai/phobert-base",
+)
+parser.add_argument(
+    "--method", type=str, help="select method to extract", default="tfidf"
 )
 args = parser.parse_args()
+
+bert_extractor = BertKeywordExtractor(args.model_name_or_path)
 
 
 def filter_pos_tagging(text, tags=["N", "Np", "V", "A"]):
@@ -53,8 +67,13 @@ if __name__ == "__main__":
     tokens = [token.replace(" ", "_") for token in corpus]
     filtered_text = [" ".join(tokens)]
 
-    extractor.fit(filtered_text)
-    keywords = extractor.extract(filtered_text, int(args.top_k))
+    if args.method == "tfidf":
+        # Extract keywords tf-idf
+        tfidf_extractor.fit(filtered_text)
+        keywords = tfidf_extractor.extract(filtered_text, top_k=args.top_k)
+    elif args.method == "bert":
+        # Extract keywords PhoBERT
+        keywords = bert_extractor.extract(filtered_text, top_k=args.top_k)
 
     keyword_dict = {word.replace("_", " "): score for word, score in keywords}
 
